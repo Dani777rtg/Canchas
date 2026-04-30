@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build / IDE
+dist/
+build/
+.idea/
+.vscode/
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini
