@@ -1,39 +1,32 @@
 # Estructura del repositorio y plan por fases
 
-## Propuesta de carpetas (monorepo)
-
-Cuando inicie el desarrollo:
+## Monorepo actual
 
 ```text
 Canchas/
-├── docs/                    # ya existente: requerimientos
-├── backend/                 # API + dominio + migraciones
-│   ├── src/
-│   ├── migrations/ o prisma/
-│   └── test/
-├── frontend/                # SPA responsive
-│   ├── src/
-│   └── public/
-├── docker-compose.yml       # opcional: Postgres + app
+├── docs/                    # Requerimientos y guías (incl. 08-INICIO-DESARROLLO)
+├── backend/                 # Spring Boot — paquete com.canchas
+│   ├── pom.xml
+│   └── src/main/java/com/canchas/
+│   └── src/main/resources/db/migration/   # Flyway
+├── frontend/                # React + Vite + TypeScript
+├── docker-compose.yml       # PostgreSQL 16
 └── README.md
 ```
 
-Alternativa: dos repos `canchas-api` y `canchas-web` si el cliente separa despliegues.
+## Stack adoptado (proyecto Canchas)
 
-## Stack recomendado (alineado a propuesta D777)
+| Capa | Tecnología |
+|------|------------|
+| Frontend | **React 18** + **TypeScript** + **Vite** |
+| Backend | **Java 17** + **Spring Boot 3.4** (Web, Security, JPA, Validation, Flyway) |
+| Base de datos | **PostgreSQL** |
 
-| Capa | Opción A | Notas |
-|------|-----------|--------|
-| Frontend | React + UI kit (MUI / Chakra) o Vue 3 | HU-024 responsive |
-| Backend | Node.js + NestJS **o** .NET 8 | Guards RB-18, transacciones |
-| BD | PostgreSQL | exclusion constraints, transacciones |
-| Infra | Docker + VPS/cloud cliente | NFR-03/06 dependen del cliente |
-
-_Si el cliente impone otro stack, documentar en ADR y ajustar estimación._
+Infra: Docker para Postgres en desarrollo; producción según cliente (NFR-03/06).
 
 ## Orden de implementación (dependencias técnicas)
 
-1. **Fundaciones:** repo, BD, auth (HU-001, 002, 005), usuarios admin (HU-004).
+1. **Fundaciones:** BD, auth (HU-001, 002, 005), usuarios admin (HU-004).
 2. **Catálogo:** sedes/canchas (HU-006, 007), horarios (HU-008), precios (HU-009), mantenimiento (HU-010).
 3. **Core negocio:** disponibilidad (HU-011), crear reserva con idempotencia (HU-012, 015), cancelar (HU-014).
 4. **Pagos y documentos:** manual (HU-016), comprobante (HU-018); luego Should pasarela (HU-017).
@@ -55,9 +48,8 @@ _Si el cliente impone otro stack, documentar en ADR y ajustar estimación._
 
 Parametrizar **10–20 %** del backlog reordenable sin impacto; nuevos módulos → adenda o Fase 2.
 
-## Próximo paso inmediato (poco a poco)
+## Próximo paso inmediato
 
-1. Completar **contexto cliente** en `docs/01-VISION-Y-ALCANCE.md` (taller).
-2. Decidir **Must estricto vs Should** para el primer entregable (ej. pasarela en Fase 1.1 o 2).
-3. Inicializar **backend** con migraciones vacías + modelo `users` + login.
-4. Inicializar **frontend** con shell y rutas públicas/privadas.
+1. Completar **contexto cliente** en `docs/01-VISION-Y-ALCANCE.md`.
+2. Seguir **`docs/08-INICIO-DESARROLLO.md`** para arrancar entorno.
+3. Implementar **E1**: entidad `User`, registro/login, JWT, endurecer `SecurityConfig`.

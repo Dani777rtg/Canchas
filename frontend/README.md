@@ -1,5 +1,15 @@
-# Frontend (pendiente)
+# Frontend — React + Vite + TypeScript
 
-Aquí vivirá la SPA responsive para flujos HU-024 y siguientes.
+- Puerto de desarrollo: **5173**
+- Proxy: peticiones a **`/api`** → `http://localhost:8080` (Spring Boot)
 
-**Siguiente paso sugerido:** Vite + React (o Vue) con enrutamiento público/privado y tema accesible.
+## Scripts
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+```
+
+La página inicial llama a `GET /api/v1/health` para comprobar que el backend está arriba.

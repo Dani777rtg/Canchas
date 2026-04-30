@@ -1,0 +1,7 @@
+# Copiar a application-local.yml (no versionar) y ajustar.
+# Activar con: SPRING_PROFILES_ACTIVE=local,mvn spring-boot:run
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/canchas
+    username: canchas
+    password: canchas_dev

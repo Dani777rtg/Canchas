@@ -9,9 +9,14 @@ node_modules/
 # Build / IDE
 dist/
 build/
+target/
 .idea/
 .vscode/
 *.log
+*.class
+
+# Spring local overrides
+backend/src/main/resources/application-local.yml
 
 # OS
 Thumbs.db
