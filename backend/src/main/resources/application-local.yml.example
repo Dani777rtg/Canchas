@@ -1,7 +1,13 @@
 # Copiar a application-local.yml (no versionar) y ajustar.
-# Activar con: SPRING_PROFILES_ACTIVE=local,mvn spring-boot:run
+# Activar en PowerShell:
+# $env:SPRING_PROFILES_ACTIVE='local'; mvn spring-boot:run
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/canchas
-    username: canchas
-    password: canchas_dev
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:canchas}
+    username: ${DB_USER:canchas}
+    password: ${DB_PASSWORD:canchas_dev}
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:change-me-in-local-env-change-me-in-local-env}
+    jwt-expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}

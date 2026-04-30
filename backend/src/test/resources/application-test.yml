@@ -9,3 +9,8 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+
+app:
+  security:
+    jwt-secret: test-secret-test-secret-test-secret-1234
+    jwt-expiration-minutes: 60
