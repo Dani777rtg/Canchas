@@ -1,4 +1,4 @@
-package com.canchas.auth.web;
+package com.canchas.user.web;
 
 import com.canchas.auth.dto.UserResponse;
 import com.canchas.user.model.User;
@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/v1/auth")
-public class MeController {
+@RequestMapping("/v1/users")
+public class UserProfileController {
 
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal User user) {

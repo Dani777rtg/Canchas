@@ -32,6 +32,24 @@ public class GlobalExceptionHandler {
         return new ApiError(Instant.now(), 401, "UNAUTHORIZED", ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleForbidden(ForbiddenException ex, HttpServletRequest request) {
+        return new ApiError(Instant.now(), 403, "FORBIDDEN", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleNotFound(NotFoundException ex, HttpServletRequest request) {
+        return new ApiError(Instant.now(), 404, "NOT_FOUND", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(UnprocessableException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ApiError handleUnprocessable(UnprocessableException ex, HttpServletRequest request) {
+        return new ApiError(Instant.now(), 422, "UNPROCESSABLE", ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {

@@ -1,11 +1,13 @@
-# Guia Postman - Backend Canchas (E1 Auth)
+# Guia Postman - Backend Canchas
 
-Esta guia prueba los endpoints actuales del backend:
+Esta guia prueba los endpoints principales del backend:
 
 - `GET /api/v1/health`
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
+- `GET /api/v1/users/me` (JWT)
+
+Tras migrar Flyway existe usuario admin semilla: `admin@canchas.local` / `Admin123A` (ver `backend/README.md`).
 
 ## 1) Levantar backend y base de datos
 
@@ -45,7 +47,7 @@ Luego selecciona el environment **Canchas Local**.
    - El script del request guarda automaticamente `accessToken` en variable de entorno.
 
 4. **Me**
-   - Request: `Auth - Me`
+   - Request: `Users - Me`
    - Esperado: `200` con perfil del usuario autenticado
 
 ## 4) Prueba de bloqueo por intentos (RB-16)

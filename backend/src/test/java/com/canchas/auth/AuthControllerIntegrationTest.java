@@ -3,10 +3,12 @@ package com.canchas.auth;
 import com.canchas.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,9 +27,18 @@ class AuthControllerIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void cleanDb() {
         userRepository.deleteAll();
+    }
+
+    @Test
+    void seedAdminPasswordFromFlywayShouldMatchSpringBcrypt() {
+        String flywaySeedHash = "$2b$10$4gBf5KefZmIw9PNnCz5a5OqjC51yOmaQnpqGhZDIbxCNQTKNFe9MK";
+        Assertions.assertTrue(passwordEncoder.matches("Admin123A", flywaySeedHash));
     }
 
     @Test
