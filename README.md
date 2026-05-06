@@ -18,7 +18,8 @@ Monorepo: documentación de producto, API **Spring Boot**, web **React (Vite)** 
 2. **API:** `cd backend && mvn spring-boot:run` → [http://localhost:8080/api/v1/health](http://localhost:8080/api/v1/health)
 3. **Web:** `cd frontend && npm install && npm run dev` → [http://localhost:5173](http://localhost:5173)
 
-Guía detallada y requisitos previos: **[docs/08-INICIO-DESARROLLO.md](docs/08-INICIO-DESARROLLO.md)**.
+Guía detallada y requisitos previos: **[docs/08-INICIO-DESARROLLO.md](docs/08-INICIO-DESARROLLO.md)**.  
+**Probar todo en local (Postgres + API + web):** **[docs/10-GUIA-PRUEBAS-LOCALES.md](docs/10-GUIA-PRUEBAS-LOCALES.md)**.
 
 ## Documentación de requerimientos
 
@@ -32,6 +33,7 @@ Guía detallada y requisitos previos: **[docs/08-INICIO-DESARROLLO.md](docs/08-I
 | [docs/06-ESTRUCTURA-REPO-Y-SPRINTS.md](docs/06-ESTRUCTURA-REPO-Y-SPRINTS.md) | Plan por fases |
 | [docs/07-CHECKLIST-SPRINT-0.md](docs/07-CHECKLIST-SPRINT-0.md) | Acta de alcance |
 | [docs/08-INICIO-DESARROLLO.md](docs/08-INICIO-DESARROLLO.md) | Cómo empezar a codificar |
+| [docs/10-GUIA-PRUEBAS-LOCALES.md](docs/10-GUIA-PRUEBAS-LOCALES.md) | Probar backend y frontend en local (paso a paso) |
 
 ## Estructura de carpetas
 

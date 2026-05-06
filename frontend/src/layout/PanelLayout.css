@@ -1,0 +1,32 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.subnav__link {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.subnav__link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.subnav__link--active {
+  background: rgba(13, 122, 77, 0.12);
+  color: var(--accent);
+}

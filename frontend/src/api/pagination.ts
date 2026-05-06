@@ -1,0 +1,11 @@
+/** Respuesta paginada típica de Spring Data (`Page`). */
+export type SpringPage<T> = {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+  empty: boolean
+}
