@@ -98,18 +98,36 @@ En la página de inicio deberías ver el estado de la API (health). Si dice que 
 
 ---
 
-## 3. Cuentas de prueba
+## 3. Cuentas y datos semilla para pruebas
 
-Tras las migraciones (incluida la semilla del dominio), existe un usuario administrador de ejemplo (documentado también en `backend/README.md`):
+Tras las migraciones (`V3` + `V4`) quedan cargados usuarios y reservas de ejemplo para validar flujos sin tener que crear datos manualmente.
 
-| Campo | Valor |
-|-------|--------|
-| Correo | `admin@canchas.local` |
-| Contraseña | `Admin123A` |
+### 3.1 Usuarios precreados
 
-**Recordatorio:** es solo para desarrollo; cambiar en producción.
+| Tipo | Correo | Contraseña | Estado |
+|------|--------|------------|--------|
+| Administrador | `admin@canchas.local` | `Admin123A` | `ACTIVO` |
+| Cliente demo 1 | `cliente1@canchas.local` | `Admin123A` | `ACTIVO` |
+| Cliente demo 2 | `cliente2@canchas.local` | `Admin123A` | `ACTIVO` |
+| Cliente demo 3 | `cliente3@canchas.local` | `Admin123A` | `INACTIVO` |
 
-Además podés **registrar un usuario cliente** desde la web: **Registro** → correo, nombre, contraseña (debe cumplir las reglas del backend: mayúscula, minúscula y número, mínimo 8 caracteres).
+**Recordatorio:** credenciales solo para desarrollo local; cambiar en producción.
+
+### 3.2 Reservas y pagos de ejemplo
+
+La semilla crea datos sobre `Cancha 1` para cubrir distintos estados de negocio:
+
+- `RSV-DEMO-001` (cliente 1): reserva `FINALIZADA` con pago `PAGADO`.
+- `RSV-DEMO-002` (cliente 2): reserva `PENDIENTE_PAGO` con pago `PENDIENTE`.
+- `RSV-DEMO-003` (cliente 1): reserva `CANCELADA` con cancelación `TEMPRANA`.
+
+Esto sirve para probar:
+
+- listado de reservas del cliente (`/panel/reservas`);
+- reportes y panel administrativo (`/admin/informes`);
+- filtros por estado y lectura de comprobantes.
+
+Si necesitás más casos, además podés **registrar un cliente nuevo** desde la web: **Registro** → correo, nombre y contraseña (reglas: mínimo 8 caracteres, con mayúscula, minúscula y número).
 
 ---
 
