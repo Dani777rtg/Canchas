@@ -1,10 +1,12 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import './AppLayout.css'
 
 export function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const mainWide = pathname === '/'
 
   async function handleLogout() {
     await logout()
@@ -15,7 +17,8 @@ export function AppLayout() {
     <div className="shell">
       <header className="shell__header">
         <Link to="/" className="shell__brand">
-          Canchas
+          <span className="shell__brand-title">Canchas</span>
+          <span className="shell__brand-tagline">Reservá tu turno</span>
         </Link>
         <nav className="shell__nav" aria-label="Principal">
           {user ? (
@@ -28,19 +31,19 @@ export function AppLayout() {
             </>
           ) : (
             <>
-              <Link to="/iniciar-sesion">Iniciar sesión</Link>
               <Link to="/registro" className="btn btn--primary btn--sm">
                 Crear cuenta
               </Link>
+              <Link to="/iniciar-sesion">Iniciar sesión</Link>
             </>
           )}
         </nav>
       </header>
-      <main className="shell__main">
+      <main className={mainWide ? 'shell__main shell__main--wide' : 'shell__main'}>
         <Outlet />
       </main>
       <footer className="shell__footer">
-        <span className="muted">API en /api · Vite + React</span>
+        <span className="muted">Reservas de canchas deportivas</span>
       </footer>
     </div>
   )

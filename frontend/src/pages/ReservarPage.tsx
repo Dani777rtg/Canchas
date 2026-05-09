@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchAvailability, type CourtAvailability, type Slot } from '../api/availability'
 import { createReservation } from '../api/reservations'
 import { ApiError } from '../api/client'
@@ -28,7 +28,16 @@ function rangeFromSlots(slots: Slot[], startIndex: number, durationHours: number
 
 export function ReservarPage() {
   const navigate = useNavigate()
-  const [date, setDate] = useState(todayIsoDate)
+  const [searchParams] = useSearchParams()
+  const urlDate = searchParams.get('fecha')
+  const dateFromUrl = urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate) ? urlDate : null
+  const [date, setDate] = useState(() => dateFromUrl ?? todayIsoDate())
+
+  useEffect(() => {
+    if (dateFromUrl) {
+      setDate(dateFromUrl)
+    }
+  }, [dateFromUrl])
   const [durationHours, setDurationHours] = useState<1 | 2 | 3>(1)
   const [courts, setCourts] = useState<CourtAvailability[]>([])
   const [loading, setLoading] = useState(true)

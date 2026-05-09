@@ -29,6 +29,19 @@ export function formatInstantShort(iso: string): string {
   }).format(new Date(iso))
 }
 
+/** Solo hora (misma zona de negocio), para grillas del mismo día. */
+export function formatTimeOnly(iso: string): string {
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone: BOGOTA,
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(iso))
+}
+
+export function formatTimeRange(startIso: string, endIso: string): string {
+  return `${formatTimeOnly(startIso)} – ${formatTimeOnly(endIso)}`
+}
+
 /** COP sin decimales en pantalla (el backend puede enviar número o string). */
 export function formatCop(amount: string | number): string {
   const n = typeof amount === 'number' ? amount : Number(amount)
