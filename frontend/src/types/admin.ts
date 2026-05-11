@@ -3,6 +3,7 @@ export type CourtStatus = 'ACTIVA' | 'INACTIVA' | 'MANTENIMIENTO'
 export type CourtSummary = {
   id: string
   venueId: string
+  venueName: string
   name: string
   sportType: string
   status: CourtStatus

@@ -100,7 +100,9 @@ En la página de inicio deberías ver el estado de la API (health). Si dice que 
 
 ## 3. Cuentas y datos semilla para pruebas
 
-Tras las migraciones (`V3` + `V4`) quedan cargados usuarios y reservas de ejemplo para validar flujos sin tener que crear datos manualmente.
+Tras las migraciones (`V3` + `V4` + `V5`) quedan cargados usuarios, ciudades, canchas y reservas de ejemplo para validar flujos sin tener que crear datos manualmente.
+
+> **Importante:** la migración **V5** elimina la cancha demo original (`Cancha 1`) y reemplaza el catálogo por **15 ciudades** con **5 canchas cada una** (75 en total). Si al abrir la web no ves canchas, asegurate de que Flyway haya aplicado V5 (queda en el log de arranque del backend).
 
 ### 3.1 Usuarios precreados
 
@@ -113,21 +115,19 @@ Tras las migraciones (`V3` + `V4`) quedan cargados usuarios y reservas de ejempl
 
 **Recordatorio:** credenciales solo para desarrollo local; cambiar en producción.
 
-### 3.2 Reservas y pagos de ejemplo
+### 3.2 Ciudades y canchas
 
-La semilla crea datos sobre `Cancha 1` para cubrir distintos estados de negocio:
+La migración V5 crea 15 sedes (ciudades de Colombia) y 5 canchas por ciudad con el nombre de un barrio típico. Todas operan **08:00–22:00** los 7 días y cobran **$80.000 COP/h**.
 
-- `RSV-DEMO-001` (cliente 1): reserva `FINALIZADA` con pago `PAGADO`.
-- `RSV-DEMO-002` (cliente 2): reserva `PENDIENTE_PAGO` con pago `PENDIENTE`.
-- `RSV-DEMO-003` (cliente 1): reserva `CANCELADA` con cancelación `TEMPRANA`.
+Ciudades sembradas: **Medellín, Manizales, Armenia, Pereira, Bogotá, Ibagué, Barranquilla, Cartagena, Montería, Pasto, Bucaramanga, Cali, Neiva, Villavicencio, Cúcuta**.
 
-Esto sirve para probar:
+> El front pide elegir ciudad al entrar; mientras no la elijas, no se muestran canchas. La selección queda guardada en el navegador (`localStorage`) y se puede cambiar desde el botón del encabezado.
 
-- listado de reservas del cliente (`/panel/reservas`);
-- reportes y panel administrativo (`/admin/informes`);
-- filtros por estado y lectura de comprobantes.
+### 3.3 Reservas y pagos de ejemplo
 
-Si necesitás más casos, además podés **registrar un cliente nuevo** desde la web: **Registro** → correo, nombre y contraseña (reglas: mínimo 8 caracteres, con mayúscula, minúscula y número).
+> Las reservas semilla de V4 estaban atadas a la `Cancha 1` original y se eliminan junto con ella en V5. Para validar listados de reservas/comprobantes en una instalación nueva, **crear al menos una reserva manualmente** con un cliente demo desde `/panel/reservar`.
+
+Si necesitás más casos, además podés **registrar un cliente nuevo** desde la web: **Crear cuenta** → correo, nombre y contraseña (reglas: mínimo 8 caracteres, con mayúscula, minúscula y número).
 
 ---
 
@@ -137,19 +137,19 @@ Con **backend** y **frontend** en marcha:
 
 ### 4.1 Cliente (`CLIENTE`)
 
-1. **Inicio** → comprobar que el health de la API responde.
+1. **Inicio** → elegir **ciudad** desde el botón con ícono de ubicación (header o tarjeta del hero).
 2. **Crear cuenta** o **Iniciar sesión** con un usuario cliente.
 3. **Mi panel** (`/panel`):
-   - **Nueva reserva** (`/panel/reservar`): elegir fecha, duración (1–3 h) y un horario libre; confirmar la reserva.
-   - **Mis reservas** (`/panel/reservas`): ver listado, abrir **Comprobante**, **Cancelar** si el estado y la hora lo permiten.
+   - **Nueva reserva** (`/panel/reservar`): elegir fecha, duración (1–3 h) y un horario libre; confirmar la reserva en el diálogo.
+   - **Mis reservas** (`/panel/reservas`): pestañas **Próximas / Pasadas / Canceladas**, abrir **Comprobante**, **Cancelar** si el estado y la hora lo permiten.
 
 ### 4.2 Administrador (`ADMINISTRADOR`)
 
 1. Cerrar sesión del cliente (si aplica) e **iniciar sesión** con `admin@canchas.local` / `Admin123A`.
 2. Menú **Administración** (`/admin`):
-   - **Canchas:** listado de canchas.
+   - **Canchas:** listado **agrupado por ciudad**, con buscador y filtro por ciudad.
    - **Usuarios:** búsqueda por correo y paginación.
-   - **Informes:** rango de fechas, métricas y descarga CSV de resumen.
+   - **Informes:** rango de fechas, métricas (reservas / ocupación / ingresos) y descarga CSV de resumen.
 
 Si entrás a `/admin` con un usuario que no es administrador, la aplicación te redirige al inicio.
 

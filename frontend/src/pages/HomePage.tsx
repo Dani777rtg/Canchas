@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CitySelector } from '@/components/CitySelector'
 import { useCity } from '@/lib/city-context'
+import { usePageTitle } from '@/lib/use-page-title'
 import { cn } from '@/lib/utils'
 import {
   addDaysIsoDate,
@@ -69,6 +70,7 @@ function buildDayPills(count: number): DayPill[] {
 export function HomePage() {
   const { user } = useAuth()
   const { selectedCity, selectedCityId } = useCity()
+  usePageTitle(selectedCity ? `Canchas en ${selectedCity.name}` : 'Inicio')
   const [date, setDate] = useState(todayIsoDate)
   const [courts, setCourts] = useState<CourtAvailability[]>([])
   const [loading, setLoading] = useState(false)
@@ -263,7 +265,7 @@ export function HomePage() {
               min={todayIsoDate()}
               max={maxDate}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-transparent text-xs focus:outline-none"
+              className="w-full bg-transparent text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
               aria-label="Elegir otra fecha"
             />
           </label>

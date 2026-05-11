@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CitySelector } from '@/components/CitySelector'
 import { useCity } from '@/lib/city-context'
+import { usePageTitle } from '@/lib/use-page-title'
 import { cn } from '@/lib/utils'
 import { addDaysIsoDate, formatInstantShort, todayIsoDate } from '@/utils/format'
 
@@ -55,6 +56,7 @@ interface PendingBooking {
 }
 
 export function ReservarPage() {
+  usePageTitle('Nueva reserva')
   const navigate = useNavigate()
   const { selectedCity, selectedCityId } = useCity()
   const [searchParams] = useSearchParams()
@@ -201,7 +203,7 @@ export function ReservarPage() {
               min={todayIsoDate()}
               max={maxDate}
               onChange={(e) => setDate(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [color-scheme:light] dark:[color-scheme:dark]"
             />
           </label>
 

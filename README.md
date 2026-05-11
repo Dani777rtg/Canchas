@@ -9,7 +9,7 @@ Monorepo: documentación de producto, API **Spring Boot**, web **React (Vite)** 
 | Capa | Tecnología |
 |------|------------|
 | Backend | Java 17, Spring Boot 3.4, Spring Security, JPA, Flyway |
-| Frontend | React 18, TypeScript, Vite |
+| Frontend | React 19, TypeScript, Vite 6, Tailwind CSS v4, shadcn/ui (Radix), lucide-react, sonner |
 | BD | PostgreSQL 16 (recomendado vía Docker) |
 
 ## Arranque rápido
@@ -49,4 +49,5 @@ Canchas/
 ## Estado
 
 - Requerimientos HU V2: definidos en `docs/`.
-- Base de código: **inicial** (health + proxy + Postgres + Flyway baseline).
+- Backend: API REST + JWT + dominio (canchas, reservas, pagos, auditoría) + reportes + Flyway con seed de **15 ciudades × 5 canchas**.
+- Frontend: tema claro/oscuro, selección de **ciudad** persistente, flujos cliente y admin migrados a Tailwind + shadcn/ui.
