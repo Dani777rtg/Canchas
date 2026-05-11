@@ -1,9 +1,26 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { fetchAvailability, type CourtAvailability, type Slot } from '../api/availability'
-import { createReservation } from '../api/reservations'
-import { ApiError } from '../api/client'
-import { addDaysIsoDate, formatInstantShort, todayIsoDate } from '../utils/format'
+import { CalendarDays, Clock, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { fetchAvailability, type CourtAvailability, type Slot } from '@/api/availability'
+import { createReservation } from '@/api/reservations'
+import { ApiError } from '@/api/client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { addDaysIsoDate, formatInstantShort, todayIsoDate } from '@/utils/format'
 
 function canBookBlock(slots: Slot[], startIndex: number, durationHours: number): boolean {
   if (durationHours < 1 || durationHours > 3) {
@@ -26,6 +43,15 @@ function rangeFromSlots(slots: Slot[], startIndex: number, durationHours: number
   return { startAt, endAt }
 }
 
+interface PendingBooking {
+  courtId: string
+  courtName: string
+  slots: Slot[]
+  startIndex: number
+  startAt: string
+  endAt: string
+}
+
 export function ReservarPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -38,21 +64,23 @@ export function ReservarPage() {
       setDate(dateFromUrl)
     }
   }, [dateFromUrl])
+
   const [durationHours, setDurationHours] = useState<1 | 2 | 3>(1)
   const [courts, setCourts] = useState<CourtAvailability[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [bookingKey, setBookingKey] = useState<string | null>(null)
+  const [pending, setPending] = useState<PendingBooking | null>(null)
+  const [booking, setBooking] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
-    setError(null)
     try {
       const data = await fetchAvailability(date)
       setCourts(data)
     } catch (e) {
       setCourts([])
-      setError(e instanceof Error ? e.message : 'No se pudo cargar la disponibilidad')
+      toast.error('No se pudo cargar la disponibilidad', {
+        description: e instanceof Error ? e.message : undefined,
+      })
     } finally {
       setLoading(false)
     }
@@ -62,104 +90,241 @@ export function ReservarPage() {
     void load()
   }, [load])
 
-  async function handleBook(courtId: string, slots: Slot[], startIndex: number) {
+  function requestBooking(
+    courtId: string,
+    courtName: string,
+    slots: Slot[],
+    startIndex: number,
+  ) {
     const { startAt, endAt } = rangeFromSlots(slots, startIndex, durationHours)
-    const key = `${courtId}-${startIndex}`
-    setBookingKey(key)
-    setError(null)
+    setPending({ courtId, courtName, slots, startIndex, startAt, endAt })
+  }
+
+  async function confirmBooking() {
+    if (!pending) {
+      return
+    }
+    setBooking(true)
     try {
-      await createReservation({ courtId, startAt, endAt })
+      await createReservation({
+        courtId: pending.courtId,
+        startAt: pending.startAt,
+        endAt: pending.endAt,
+      })
+      toast.success('Reserva creada', {
+        description: `${pending.courtName} · ${formatInstantShort(pending.startAt)}`,
+      })
+      setPending(null)
       navigate('/panel/reservas')
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : 'No se pudo crear la reserva'
-      setError(msg)
+      toast.error(msg)
     } finally {
-      setBookingKey(null)
+      setBooking(false)
     }
   }
 
   const maxDate = addDaysIsoDate(todayIsoDate(), 30)
 
+  const totalBookable = useMemo(
+    () =>
+      courts.reduce((acc, court) => {
+        let n = 0
+        for (let i = 0; i < court.slots.length; i++) {
+          if (canBookBlock(court.slots, i, durationHours)) {
+            n++
+          }
+        }
+        return acc + n
+      }, 0),
+    [courts, durationHours],
+  )
+
   return (
-    <div className="page">
-      <h1>Nueva reserva</h1>
-      <p className="lede">
-        Elegí fecha y duración (1 a 3 horas). Solo se muestran horarios libres según la disponibilidad
-        actual.
-      </p>
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-display text-3xl font-bold tracking-tight">
+          Nueva reserva
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Elegí fecha y duración (1 a 3 horas). Solo se muestran horarios libres
+          según la disponibilidad actual.
+        </p>
+      </header>
 
-      <div className="card form-row">
-        <label className="field field--inline">
-          <span>Fecha</span>
-          <input
-            type="date"
-            value={date}
-            min={todayIsoDate()}
-            max={maxDate}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </label>
-        <label className="field field--inline">
-          <span>Duración</span>
-          <select
-            value={durationHours}
-            onChange={(e) => setDurationHours(Number(e.target.value) as 1 | 2 | 3)}
-          >
-            <option value={1}>1 hora</option>
-            <option value={2}>2 horas</option>
-            <option value={3}>3 horas</option>
-          </select>
-        </label>
-      </div>
+      <Card>
+        <CardContent className="flex flex-wrap items-end gap-4 p-5">
+          <label className="flex flex-1 flex-col gap-1.5 min-w-[12rem]">
+            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Fecha
+            </span>
+            <input
+              type="date"
+              value={date}
+              min={todayIsoDate()}
+              max={maxDate}
+              onChange={(e) => setDate(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </label>
 
-      {error && (
-        <div className="form-error" role="alert">
-          {error}
+          <div className="flex flex-1 flex-col gap-1.5 min-w-[12rem]">
+            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              Duración
+            </span>
+            <div className="flex gap-1.5">
+              {[1, 2, 3].map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => setDurationHours(h as 1 | 2 | 3)}
+                  className={cn(
+                    'flex-1 rounded-md border px-3 py-2 text-sm font-semibold transition-colors',
+                    durationHours === h
+                      ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                      : 'border-input bg-background hover:border-primary/40 hover:text-primary',
+                  )}
+                >
+                  {h} h
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!loading && (
+            <Badge
+              variant={totalBookable > 0 ? 'success' : 'muted'}
+              className="h-10 self-end px-3 text-sm"
+            >
+              {totalBookable} bloques reservables
+            </Badge>
+          )}
+        </CardContent>
+      </Card>
+
+      {loading && (
+        <div className="space-y-4">
+          {[0, 1].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-5 w-40" />
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2 pb-5">
+                {[0, 1, 2, 3].map((j) => (
+                  <Skeleton key={j} className="h-9 w-32" />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {loading && <p className="muted">Cargando disponibilidad…</p>}
-
       {!loading &&
-        courts.map((court) => (
-          <section key={court.courtId} className="card court-block">
-            <h2>{court.courtName}</h2>
-            {court.slots.length === 0 && (
-              <p className="muted">Sin horario operativo para este día o cancha sin franjas.</p>
-            )}
-            {court.slots.length > 0 && (
-              <ul className="slot-actions">
-                {court.slots.map((_, i) => {
-                  if (!canBookBlock(court.slots, i, durationHours)) {
-                    return null
-                  }
-                  const { startAt, endAt } = rangeFromSlots(court.slots, i, durationHours)
-                  const busy = bookingKey === `${court.courtId}-${i}`
-                  return (
-                    <li key={`${court.courtId}-${i}`}>
-                      <button
-                        type="button"
-                        className="btn btn--primary btn--sm"
-                        disabled={busy}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `¿Reservar ${court.courtName} el ${formatInstantShort(startAt)} (${durationHours} h)?`,
-                            )
-                          ) {
-                            void handleBook(court.courtId, court.slots, i)
-                          }
-                        }}
-                      >
-                        {busy ? 'Reservando…' : `${formatInstantShort(startAt)} – ${formatInstantShort(endAt)}`}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </section>
-        ))}
+        courts.map((court) => {
+          const blocks = court.slots
+            .map((_, i) => i)
+            .filter((i) => canBookBlock(court.slots, i, durationHours))
+
+          return (
+            <Card key={court.courtId}>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle>{court.courtName}</CardTitle>
+                  <Badge variant={blocks.length > 0 ? 'success' : 'muted'}>
+                    {blocks.length} disponibles
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {court.slots.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Sin horario operativo para este día o cancha sin franjas.
+                  </p>
+                )}
+                {court.slots.length > 0 && blocks.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No hay bloques contiguos de {durationHours} h libres en esta cancha.
+                  </p>
+                )}
+                {blocks.length > 0 && (
+                  <ul className="flex flex-wrap gap-2">
+                    {blocks.map((i) => {
+                      const { startAt, endAt } = rangeFromSlots(
+                        court.slots,
+                        i,
+                        durationHours,
+                      )
+                      return (
+                        <li key={`${court.courtId}-${i}`}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              requestBooking(
+                                court.courtId,
+                                court.courtName,
+                                court.slots,
+                                i,
+                              )
+                            }
+                          >
+                            {formatInstantShort(startAt)} – {formatInstantShort(endAt)}
+                          </Button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+
+      <AlertDialog
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open && !booking) {
+            setPending(null)
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar reserva</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pending && (
+                <>
+                  Vas a reservar la <strong>{pending.courtName}</strong> el{' '}
+                  <strong>{formatInstantShort(pending.startAt)}</strong> por{' '}
+                  <strong>{durationHours} h</strong>.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={booking}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                void confirmBooking()
+              }}
+              disabled={booking}
+            >
+              {booking ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Reservando…
+                </>
+              ) : (
+                'Confirmar reserva'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
