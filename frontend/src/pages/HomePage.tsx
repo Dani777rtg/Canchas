@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  MapPin,
   Search,
   Sparkles,
   Trophy,
@@ -16,6 +17,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CitySelector } from '@/components/CitySelector'
+import { useCity } from '@/lib/city-context'
 import { cn } from '@/lib/utils'
 import {
   addDaysIsoDate,
@@ -65,19 +68,24 @@ function buildDayPills(count: number): DayPill[] {
 
 export function HomePage() {
   const { user } = useAuth()
+  const { selectedCity, selectedCityId } = useCity()
   const [date, setDate] = useState(todayIsoDate)
   const [courts, setCourts] = useState<CourtAvailability[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const maxDate = addDaysIsoDate(todayIsoDate(), 30)
   const dayPills = useMemo(() => buildDayPills(10), [])
 
   const load = useCallback(async () => {
+    if (!selectedCityId) {
+      setCourts([])
+      return
+    }
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchAvailability(date)
+      const data = await fetchAvailability(date, { venueId: selectedCityId })
       setCourts(data)
     } catch (e) {
       setCourts([])
@@ -89,7 +97,7 @@ export function HomePage() {
     } finally {
       setLoading(false)
     }
-  }, [date])
+  }, [date, selectedCityId])
 
   useEffect(() => {
     void load()
@@ -107,6 +115,7 @@ export function HomePage() {
 
   const reservarHref = `/panel/reservar?fecha=${encodeURIComponent(date)}`
   const loginState = { from: reservarHref }
+  const cityName = selectedCity?.name
 
   return (
     <div className="space-y-8">
@@ -126,15 +135,24 @@ export function HomePage() {
             Reservá en 30 segundos
           </Badge>
           <h1 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-            Encontrá tu cancha y horario.{' '}
-            <span className="text-primary">Sin filas, sin llamadas.</span>
+            {cityName ? (
+              <>
+                Canchas en <span className="text-primary">{cityName}</span>
+              </>
+            ) : (
+              <>
+                Encontrá tu cancha y horario.{' '}
+                <span className="text-primary">Sin filas, sin llamadas.</span>
+              </>
+            )}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Consultá qué canchas están activas y qué franjas de una hora están
-            libres. No hace falta iniciar sesión para mirar. Cuando estés
-            listo, reservá en un par de clics.
+            {cityName
+              ? `Mirá las canchas disponibles en ${cityName} y reservá tu hora en un par de clics.`
+              : 'Consultá qué canchas están activas y qué franjas de una hora están libres. Empezá eligiendo tu ciudad.'}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <CitySelector />
             {user ? (
               <Button asChild size="lg">
                 <Link to={reservarHref}>
@@ -161,7 +179,29 @@ export function HomePage() {
         </div>
       </section>
 
+      {!selectedCityId && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
+              <MapPin className="h-7 w-7" />
+            </div>
+            <div className="max-w-md">
+              <h2 className="font-display text-xl font-semibold">
+                Primero elegí tu ciudad
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Solo vas a ver canchas disponibles en la ciudad que elijas, así
+                no se mezclan resultados de otras ciudades. Lo podés cambiar
+                cuando quieras.
+              </p>
+            </div>
+            <CitySelector />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Selector de día */}
+      {selectedCityId && (
       <section>
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight">
@@ -229,9 +269,10 @@ export function HomePage() {
           </label>
         </div>
       </section>
+      )}
 
       {/* Stats / resumen */}
-      {!loading && !error && courts.length > 0 && (
+      {selectedCityId && !loading && !error && courts.length > 0 && (
         <section className="grid gap-3 sm:grid-cols-3">
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
@@ -286,7 +327,7 @@ export function HomePage() {
       )}
 
       {/* Errores */}
-      {error && (
+      {selectedCityId && error && (
         <div
           className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
           role="alert"
@@ -308,9 +349,16 @@ export function HomePage() {
       )}
 
       {/* Lista de canchas */}
+      {selectedCityId && (
       <section>
-        <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">
+        <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold tracking-tight">
           Disponibilidad por cancha
+          {cityName && (
+            <Badge variant="muted" className="font-normal">
+              <MapPin className="h-3 w-3" />
+              {cityName}
+            </Badge>
+          )}
         </h2>
 
         {loading && (
@@ -339,17 +387,17 @@ export function HomePage() {
               </div>
               <div>
                 <p className="font-medium">
-                  Todavía no hay canchas activas en el sistema.
+                  No hay canchas activas en {cityName ?? 'esta ciudad'} todavía.
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Volvé en un rato o consultá con el administrador.
+                  Probá con otra ciudad o volvé más tarde.
                 </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {!loading && courts.length > 0 && (
+        {!loading && !error && courts.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {courts.map((court) => {
               const free = court.slots.filter((s) => s.available).length
@@ -410,6 +458,7 @@ export function HomePage() {
           </div>
         )}
       </section>
+      )}
 
       {/* CTA final */}
       <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-secondary/40 p-6 sm:p-8">

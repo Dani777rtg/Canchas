@@ -136,56 +136,64 @@
 
 /* ===========================================================
    Clases legacy (páginas que aún no se migraron a Tailwind).
-   Se irán removiendo a medida que migremos cada página.
+   Se envuelven en @layer para que las utilidades de Tailwind v4
+   tengan mayor prioridad y los componentes shadcn (Button, etc.)
+   no sean pisados por estos estilos globales.
    =========================================================== */
 
-a {
-  color: var(--primary);
-  font-weight: 500;
-  text-decoration: none;
+@layer base {
+  /* Solo enlaces de contenido (no botones-asChild ni dentro de cards stylizadas) */
+  a:not([class*='bg-']):not([class*='btn']) {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  a:not([class*='bg-']):not([class*='btn']):hover {
+    text-decoration: underline;
+  }
+
+  code {
+    font-size: 0.9em;
+    padding: 0.15em 0.35em;
+    border-radius: 6px;
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+  }
 }
 
-a:hover {
-  text-decoration: underline;
+@layer components {
+  .muted {
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+  }
+
+  .page h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.75rem;
+  }
+
+  .page--narrow {
+    max-width: 22rem;
+  }
+
+  .page--center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+    min-height: 40vh;
+  }
+
+  .lede {
+    font-size: 1.05rem;
+    color: var(--muted-foreground);
+    margin: 0 0 1.5rem;
+  }
 }
 
-code {
-  font-size: 0.9em;
-  padding: 0.15em 0.35em;
-  border-radius: 6px;
-  background: color-mix(in oklch, var(--primary) 12%, transparent);
-}
-
-.muted {
-  color: var(--muted-foreground);
-  font-size: 0.95rem;
-}
-
-.page h1 {
-  margin: 0 0 0.5rem;
-  font-size: 1.75rem;
-}
-
-.page--narrow {
-  max-width: 22rem;
-}
-
-.page--center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 1rem;
-  min-height: 40vh;
-}
-
-.lede {
-  font-size: 1.05rem;
-  color: var(--muted-foreground);
-  margin: 0 0 1.5rem;
-}
-
+@layer components {
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -491,4 +499,5 @@ code {
 .small-dd {
   font-size: 0.85rem;
   line-height: 1.4;
+}
 }

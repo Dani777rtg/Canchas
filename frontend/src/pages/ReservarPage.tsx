@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CalendarDays, Clock, Loader2 } from 'lucide-react'
+import { CalendarDays, Clock, Loader2, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import { fetchAvailability, type CourtAvailability, type Slot } from '@/api/availability'
 import { createReservation } from '@/api/reservations'
@@ -19,6 +19,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CitySelector } from '@/components/CitySelector'
+import { useCity } from '@/lib/city-context'
 import { cn } from '@/lib/utils'
 import { addDaysIsoDate, formatInstantShort, todayIsoDate } from '@/utils/format'
 
@@ -54,6 +56,7 @@ interface PendingBooking {
 
 export function ReservarPage() {
   const navigate = useNavigate()
+  const { selectedCity, selectedCityId } = useCity()
   const [searchParams] = useSearchParams()
   const urlDate = searchParams.get('fecha')
   const dateFromUrl = urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate) ? urlDate : null
@@ -67,14 +70,18 @@ export function ReservarPage() {
 
   const [durationHours, setDurationHours] = useState<1 | 2 | 3>(1)
   const [courts, setCourts] = useState<CourtAvailability[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [pending, setPending] = useState<PendingBooking | null>(null)
   const [booking, setBooking] = useState(false)
 
   const load = useCallback(async () => {
+    if (!selectedCityId) {
+      setCourts([])
+      return
+    }
     setLoading(true)
     try {
-      const data = await fetchAvailability(date)
+      const data = await fetchAvailability(date, { venueId: selectedCityId })
       setCourts(data)
     } catch (e) {
       setCourts([])
@@ -84,7 +91,7 @@ export function ReservarPage() {
     } finally {
       setLoading(false)
     }
-  }, [date])
+  }, [date, selectedCityId])
 
   useEffect(() => {
     void load()
@@ -142,16 +149,45 @@ export function ReservarPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl font-bold tracking-tight">
-          Nueva reserva
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Elegí fecha y duración (1 a 3 horas). Solo se muestran horarios libres
-          según la disponibilidad actual.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            Nueva reserva
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Elegí fecha y duración (1 a 3 horas). Solo se muestran horarios
+            libres según la disponibilidad actual.
+          </p>
+        </div>
+        {selectedCity && (
+          <Badge variant="muted" className="h-7 px-3 text-sm">
+            <MapPin className="h-3.5 w-3.5" />
+            {selectedCity.name}
+          </Badge>
+        )}
       </header>
 
+      {!selectedCityId && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
+              <MapPin className="h-7 w-7" />
+            </div>
+            <div className="max-w-md">
+              <h2 className="font-display text-xl font-semibold">
+                Elegí tu ciudad para ver canchas
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Necesitamos saber en qué ciudad querés jugar para mostrarte las
+                canchas disponibles.
+              </p>
+            </div>
+            <CitySelector />
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedCityId && (
       <Card>
         <CardContent className="flex flex-wrap items-end gap-4 p-5">
           <label className="flex flex-1 flex-col gap-1.5 min-w-[12rem]">
@@ -203,8 +239,9 @@ export function ReservarPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
-      {loading && (
+      {selectedCityId && loading && (
         <div className="space-y-4">
           {[0, 1].map((i) => (
             <Card key={i}>
@@ -221,7 +258,15 @@ export function ReservarPage() {
         </div>
       )}
 
-      {!loading &&
+      {selectedCityId && !loading && courts.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No hay canchas activas en {selectedCity?.name ?? 'esta ciudad'} para esta fecha.
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedCityId && !loading &&
         courts.map((court) => {
           const blocks = court.slots
             .map((_, i) => i)

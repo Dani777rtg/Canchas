@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
+import { CityProvider } from './lib/city-context'
 import { AdminRoute } from './components/AdminRoute'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminLayout } from './layout/AdminLayout'
@@ -21,6 +22,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <CityProvider>
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
@@ -55,6 +57,7 @@ export default function App() {
           </Route>
           <Route path="/login" element={<Navigate to="/iniciar-sesion" replace />} />
         </Routes>
+        </CityProvider>
       </AuthProvider>
     </BrowserRouter>
   )

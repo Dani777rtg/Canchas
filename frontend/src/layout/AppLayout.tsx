@@ -2,6 +2,7 @@ import { CalendarDays, LayoutDashboard, LogIn, LogOut, ShieldCheck, UserPlus } f
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/useAuth'
 import { Brand } from '@/components/Brand'
+import { CitySelector } from '@/components/CitySelector'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
@@ -22,12 +23,18 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 rounded-lg p-1 -m-1 transition-colors hover:bg-secondary"
-          >
-            <Brand />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 rounded-lg p-1 -m-1 transition-colors hover:bg-secondary"
+            >
+              <Brand />
+            </Link>
+            <span className="hidden h-6 w-px bg-border sm:inline-block" />
+            <div className="hidden sm:block">
+              <CitySelector variant="header" />
+            </div>
+          </div>
 
           <nav
             className="flex items-center gap-1 sm:gap-2"
