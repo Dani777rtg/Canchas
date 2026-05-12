@@ -2,6 +2,7 @@ package com.canchas.auth;
 
 import com.canchas.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DisplayName("API de autenticación (integración: Spring + MockMvc + H2)")
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -36,12 +38,14 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("Semilla Flyway: la contraseña de admin en migración coincide con el encoder BCrypt de Spring.")
     void seedAdminPasswordFromFlywayShouldMatchSpringBcrypt() {
         String flywaySeedHash = "$2b$10$4gBf5KefZmIw9PNnCz5a5OqjC51yOmaQnpqGhZDIbxCNQTKNFe9MK";
         Assertions.assertTrue(passwordEncoder.matches("Admin123A", flywaySeedHash));
     }
 
     @Test
+    @DisplayName("HTTP POST /register: crea usuario cliente y responde 201 con JWT y datos del usuario.")
     void registerShouldCreateUserAndReturnToken() throws Exception {
         String payload = """
                 {
@@ -62,6 +66,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("HTTP POST /login: con contraseña incorrecta responde 401 y código de error esperado.")
     void loginShouldFailWhenPasswordIsInvalid() throws Exception {
         String registerPayload = """
                 {

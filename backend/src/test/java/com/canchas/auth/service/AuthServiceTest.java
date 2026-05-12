@@ -12,6 +12,7 @@ import com.canchas.user.model.UserStatus;
 import com.canchas.user.repository.UserRepository;
 import com.canchas.auth.repository.PasswordResetTokenRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("AuthService: registro e inicio de sesión (lógica de negocio, sin base de datos real)")
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -63,6 +65,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Registro: si el correo ya existe, se rechaza con error de conflicto y no se guarda ningún usuario.")
     void register_throwsWhenEmailAlreadyExists() {
         when(userRepository.existsByEmail("dup@mail.com")).thenReturn(true);
         RegisterRequest req = new RegisterRequest("Dup@Mail.Com", "Clave123A", "Nombre", "300");
@@ -74,6 +77,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Registro exitoso: normaliza correo y nombre, guarda cliente activo, codifica la contraseña y devuelve token JWT.")
     void register_savesClienteAndReturnsToken() {
         when(userRepository.existsByEmail("new@mail.com")).thenReturn(false);
         when(passwordEncoder.encode("Clave123A")).thenReturn("encoded-hash");
@@ -102,6 +106,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Login: si no hay usuario con ese correo, se responde como credenciales inválidas (sin filtrar si existía o no).")
     void login_throwsWhenUserNotFound() {
         when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.empty());
 
@@ -111,6 +116,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Login: usuario inactivo no puede entrar aunque la contraseña sea correcta.")
     void login_throwsWhenUserInactive() {
         User user = baseUser();
         user.setStatus(UserStatus.INACTIVO);
@@ -122,6 +128,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Login: cuenta temporalmente bloqueada no acepta intentos hasta pasar el tiempo de bloqueo.")
     void login_throwsLockedWhenStillLocked() {
         User user = baseUser();
         user.setLockedUntil(OffsetDateTime.now().plusMinutes(10));
@@ -133,6 +140,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Login: contraseña incorrecta incrementa el contador de intentos fallidos y persiste el usuario.")
     void login_wrongPassword_incrementsFailedCount() {
         User user = baseUser();
         user.setFailedLoginCount(0);
@@ -149,6 +157,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Login: al quinto intento fallido seguido, la cuenta se bloquea por un periodo y el contador de intentos se reinicia.")
     void login_fifthWrongAttempt_setsLockAndResetsCounter() {
         User user = baseUser();
         user.setFailedLoginCount(4);
@@ -165,6 +174,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Login exitoso: limpia bloqueo e intentos fallidos, guarda el usuario y devuelve token JWT.")
     void login_success_clearsLockAndReturnsToken() {
         User user = baseUser();
         user.setFailedLoginCount(2);

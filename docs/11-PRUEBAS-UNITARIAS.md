@@ -6,6 +6,18 @@ Para levantar API + front + Postgres en local, seguí [docs/10-GUIA-PRUEBAS-LOCA
 
 ---
 
+## Cómo explicar las pruebas unitarias (qué son y cómo funcionan)
+
+Podés usar una idea simple en tres frases:
+
+1. **Qué son:** un programa de comprobación **automático** que ejecuta **un trozo** de la aplicación (por ejemplo el método `register` del servicio de autenticación) con **datos de ejemplo** y revisa si el comportamiento es el esperado (devuelve token, lanza error de correo duplicado, etc.).
+2. **Cómo funcionan:** en lugar de conectar a PostgreSQL real, el test **sustituye** las dependencias (repositorio, codificador de contraseñas, JWT) por **dobles controlados** (Mockito). Así la prueba es **rápida**, **repetible** y falla solo si **tu lógica** cambió, no si la red o la base fallaron.
+3. **Para qué sirven:** documentan reglas de negocio en código y **evitan regresiones**: si alguien modifica el login y rompe el bloqueo por intentos, el test debería fallar en el mismo `mvn test` antes de llegar a producción.
+
+**Analogía breve:** es como un checklist que la computadora recorre sola cada vez que compilás; cada ítem es un escenario (“correo duplicado”, “quinto intento mal”) que ya dejó acordado el equipo.
+
+---
+
 ## 1. ¿Ya están todas las pruebas unitarias?
 
 **No.** En el backend hay **dos capas** de pruebas automáticas mezcladas en `mvn test`:
@@ -53,9 +65,12 @@ Ejemplo de referencia:
 
 Evitá `@SpringBootTest` en tests que pretendan ser **solo unitarios**; si aparece el banner de Spring Boot al correr un test, es integración.
 
-### 3.2 Nombres de tests
+### 3.2 Nombres y descripción en lenguaje natural
 
-Convención legible: `metodoOComportamiento_condicion_resultadoEsperado`, por ejemplo `login_wrongPassword_incrementsFailedCount`.
+- **Nombre técnico del método** (`login_wrongPassword_incrementsFailedCount`): útil para buscar en el código y en el reporte XML de Surefire.
+- **`@DisplayName("...")` en español:** es el texto **humano** que ves en el IDE y el que se imprime en consola antes de cada prueba (ver la sección **5.1**, salida en consola).
+
+Convención del nombre técnico: `metodoOComportamiento_condicion_resultadoEsperado`.
 
 ### 3.3 Entidades JPA sin setters públicos
 
@@ -89,6 +104,23 @@ En Windows PowerShell los argumentos con `#` a veces requieren comillas: `mvn te
 ### 5.1 Salida en consola
 
 `mvn test` al final muestra un resumen: tests ejecutados, fallos, errores, skipped. Eso alcanza para CI y para adjuntar en un comentario de PR.
+
+**Mensajes en lenguaje natural antes de cada `@Test`**
+
+Antes de ejecutar cada método de prueba, la consola muestra un bloque con el **nombre de la clase**, una línea **`Tipo:`** (**UNITARIA** o **INTEGRACION**) y el texto de **`@DisplayName`** en la línea **`Caso:`**. El tipo se infiere automáticamente: si la clase (o una clase contenedora o padre) lleva `@SpringBootTest`, `@WebMvcTest` o `@DataJpaTest`, se muestra **INTEGRACION**; si no, **UNITARIA**.
+
+Cómo está cableado en este repo:
+
+| Pieza | Ubicación |
+|-------|-----------|
+| Extensión JUnit que imprime el bloque | `backend/src/test/java/com/canchas/test/ConsoleTestAnnouncementExtension.java` |
+| Activar registro automático de extensiones | `backend/src/test/resources/junit-platform.properties` (`junit.jupiter.extensions.autodetection.enabled=true`) |
+| Declarar la extensión vía ServiceLoader | `backend/src/test/resources/META-INF/services/org.junit.jupiter.api.extension.Extension` (una línea con el nombre completo de la clase) |
+| Texto humano por caso | `@DisplayName("...")` en cada `@Test` (y opcionalmente en la clase) |
+
+Para nuevos tests, solo hace falta añadir **`@DisplayName`** con una frase clara; no tenés que registrar nada más.
+
+Si en **Windows** (`cmd.exe`) ves caracteres raros en tildes, podés ejecutar `chcp 65001` antes de `mvn test` para UTF-8, o usar una terminal que ya use UTF-8 (PowerShell moderno / IDE).
 
 ### 5.2 Reportes Surefire (por clase)
 
@@ -138,4 +170,5 @@ en el plugin **maven-surefire-plugin**, para que los tests sigan corriendo. Cuan
 2. ¿Necesitás HTTP + validación + seguridad real? → `@WebMvcTest` o test de integración existente.
 3. ¿Necesitás SQL y repositorios reales? → `@DataJpaTest` o integración con H2 (perfil `test`).
 4. Corré `mvn test` antes de subir cambios.
-5. Si el PR es para no técnicos, dejá una línea en la descripción enlazando escenarios de negocio a los nombres de los métodos `@Test`.
+5. En cada `@Test` nuevo, añadí `@DisplayName("...")` en español para que la consola y el IDE describan el caso en lenguaje natural.
+6. Si el PR es para no técnicos, enlazá escenarios de negocio a esos `@DisplayName` o a los nombres de los métodos `@Test`.
