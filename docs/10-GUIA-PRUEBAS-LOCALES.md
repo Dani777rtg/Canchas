@@ -174,6 +174,10 @@ Los endpoints autenticados requieren cabecera `Authorization: Bearer <JWT>` (obt
 | Lint frontend | `cd frontend` → `npm run lint` |
 | Ver logs Postgres | `docker compose logs -f postgres` (en la raíz del repo) |
 
+### 6.1 Pruebas automáticas (unitarias e integración)
+
+Resumen: `mvn test` en `backend/` ejecuta **unitarias** (Mockito, sin Spring completo) e **integración** (Spring + H2). Guía detallada — qué falta cubrir, cómo escribir tests, comandos, reportes y cómo presentarlas a distintas audiencias: [docs/11-PRUEBAS-UNITARIAS.md](11-PRUEBAS-UNITARIAS.md).
+
 ---
 
 ## 7. Problemas frecuentes
@@ -191,5 +195,6 @@ Los endpoints autenticados requieren cabecera `Authorization: Bearer <JWT>` (obt
 ## 8. Documentación relacionada
 
 - Arranque genérico del repo: [docs/08-INICIO-DESARROLLO.md](08-INICIO-DESARROLLO.md)
+- Pruebas unitarias y cómo mostrarlas: [docs/11-PRUEBAS-UNITARIAS.md](11-PRUEBAS-UNITARIAS.md)
 - Endpoints y contratos: [docs/05-API-Y-CONTRATOS.md](05-API-Y-CONTRATOS.md)
 - README del backend (lista de rutas): [backend/README.md](../backend/README.md)

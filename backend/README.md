@@ -67,3 +67,5 @@ mvn test
 ```
 
 Los tests usan **H2** en memoria (perfil `test`), sin Docker.
+
+Guía de pruebas **unitarias** vs integración, comandos y cómo presentarlas: [docs/11-PRUEBAS-UNITARIAS.md](../docs/11-PRUEBAS-UNITARIAS.md).
