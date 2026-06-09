@@ -73,7 +73,7 @@ Render creará los servicios y empezará el primer deploy.
 | Servicio | Tiempo estimado | Notas |
 |----------|-----------------|-------|
 | PostgreSQL | ~1 min | Queda en estado *Available* |
-| canchas-api | 5–15 min | Maven descarga dependencias; Flyway aplica migraciones |
+| canchas-api | 5–15 min | Docker compila con Maven; Flyway aplica migraciones |
 | canchas-web | 2–5 min | `npm install && npm run build` |
 
 **Importante:** el primer arranque de la API puede tardar más porque Flyway ejecuta V5 (75 canchas).
@@ -151,9 +151,7 @@ Si prefieres crear cada servicio a mano:
 - **New +** → **Web Service**
 - Repo: Canchas, Branch: `main`
 - Root Directory: `backend`
-- Runtime: **Java**
-- Build Command: `mvn -DskipTests clean package`
-- Start Command: `java -jar target/canchas-api-0.0.1-SNAPSHOT.jar`
+- Runtime: **Docker** (Render no soporta Java nativo; usa `backend/Dockerfile`)
 - Health Check Path: `/api/v1/health`
 - Variables de entorno: vincula la BD (`DB_HOST`, etc.) + `JWT_SECRET` (string aleatorio largo)
 

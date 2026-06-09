@@ -11,14 +11,13 @@ databases:
     user: canchas
 
 services:
-  # --- API Spring Boot ---
+  # --- API Spring Boot (Java vía Docker; Render no tiene runtime java nativo) ---
   - type: web
     name: canchas-api
-    runtime: java
+    runtime: docker
     plan: free
     rootDir: backend
-    buildCommand: mvn -DskipTests clean package
-    startCommand: java -jar target/canchas-api-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/v1/health
     envVars:
       - key: DB_HOST
