@@ -1,5 +1,5 @@
 import { apiFetch, getStoredToken } from './client'
-import type { AdminUser, CourtSummary } from '../types/admin'
+import type { AdminUser, AdminReservation, CourtSummary } from '../types/admin'
 import type { SpringPage } from './pagination'
 
 export async function fetchAdminCourts(): Promise<CourtSummary[]> {
@@ -19,6 +19,25 @@ export async function fetchAdminUsers(
     q.set('email', email.trim())
   }
   return apiFetch<SpringPage<AdminUser>>(`/api/v1/admin/users?${q.toString()}`)
+}
+
+export async function fetchAdminReservations(
+  from: string,
+  to: string,
+  page = 1,
+  limit = 20,
+  status?: string,
+): Promise<SpringPage<AdminReservation>> {
+  const q = new URLSearchParams({
+    from,
+    to,
+    page: String(page),
+    limit: String(limit),
+  })
+  if (status?.trim()) {
+    q.set('status', status.trim())
+  }
+  return apiFetch<SpringPage<AdminReservation>>(`/api/v1/admin/reservations?${q.toString()}`)
 }
 
 export type ReportMap = Record<string, string | number | undefined>

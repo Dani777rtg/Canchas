@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Building2, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, ListChecks, ShieldCheck, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { usePageTitle } from '@/lib/use-page-title'
@@ -9,6 +9,12 @@ const cards = [
     icon: Building2,
     title: 'Canchas',
     description: 'Listado y estado operativo de cada cancha por ciudad.',
+  },
+  {
+    to: '/admin/reservas',
+    icon: ListChecks,
+    title: 'Reservas',
+    description: 'Detalle de reservas por fecha, cliente, cancha y estado de pago.',
   },
   {
     to: '/admin/usuarios',
@@ -37,7 +43,7 @@ export function AdminHomePage() {
             Administración
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Gestioná canchas, usuarios e informes del sistema.
+            Gestioná canchas, reservas, usuarios e informes del sistema.
           </p>
         </div>
       </header>

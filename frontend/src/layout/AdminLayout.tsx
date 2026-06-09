@@ -1,10 +1,11 @@
-import { BarChart3, Building2, ShieldCheck, Users } from 'lucide-react'
+import { BarChart3, Building2, ListChecks, ShieldCheck, Users } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const items = [
   { to: '/admin', label: 'Inicio', icon: ShieldCheck, end: true },
   { to: '/admin/canchas', label: 'Canchas', icon: Building2, end: false },
+  { to: '/admin/reservas', label: 'Reservas', icon: ListChecks, end: false },
   { to: '/admin/usuarios', label: 'Usuarios', icon: Users, end: false },
   { to: '/admin/informes', label: 'Informes', icon: BarChart3, end: false },
 ]

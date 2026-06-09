@@ -9,6 +9,7 @@ import { PanelLayout } from './layout/PanelLayout'
 import { AdminCourtsPage } from './pages/AdminCourtsPage'
 import { AdminHomePage } from './pages/AdminHomePage'
 import { AdminReportsPage } from './pages/AdminReportsPage'
+import { AdminReservationsPage } from './pages/AdminReservationsPage'
 import { AdminUsersPage } from './pages/AdminUsersPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { HomePage } from './pages/HomePage'
@@ -50,6 +51,7 @@ export default function App() {
             >
               <Route index element={<AdminHomePage />} />
               <Route path="canchas" element={<AdminCourtsPage />} />
+              <Route path="reservas" element={<AdminReservationsPage />} />
               <Route path="usuarios" element={<AdminUsersPage />} />
               <Route path="informes" element={<AdminReportsPage />} />
             </Route>

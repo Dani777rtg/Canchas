@@ -18,3 +18,26 @@ export type AdminUser = {
   role: 'ADMINISTRADOR' | 'CLIENTE'
   status: 'ACTIVO' | 'INACTIVO'
 }
+
+export type PaymentStatus =
+  | 'PENDIENTE'
+  | 'PAGADO'
+  | 'FALLIDO'
+  | 'REVERSADO'
+  | 'EXONERADO'
+
+export type AdminReservation = {
+  id: string
+  publicCode: string
+  courtId: string
+  courtName: string
+  venueName: string
+  userId: string
+  userEmail: string
+  userFullName: string
+  startAt: string
+  endAt: string
+  status: import('./reservation').ReservationStatus
+  paymentStatus: PaymentStatus
+  total: string | number
+}

@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("""
             select u from User u
-            where (:email is null or lower(u.email) like lower(concat('%', :email, '%')))
+            where lower(u.email) like lower(concat('%', :email, '%'))
             """)
-    Page<User> searchByEmailOptional(@Param("email") String email, Pageable pageable);
+    Page<User> searchByEmailContainingIgnoreCase(@Param("email") String email, Pageable pageable);
 }

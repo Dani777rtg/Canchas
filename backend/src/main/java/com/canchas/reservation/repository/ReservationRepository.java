@@ -78,4 +78,45 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
             @Param("start") Instant start,
             @Param("end") Instant end
     );
+
+    @Query(
+            value = """
+                    select r from Reservation r
+                    join r.court c
+                    join c.venue v
+                    join r.user u
+                    where r.startAt >= :fromInstant and r.startAt < :toInstant
+                    """,
+            countQuery = """
+                    select count(r) from Reservation r
+                    where r.startAt >= :fromInstant and r.startAt < :toInstant
+                    """
+    )
+    Page<Reservation> findAdminPage(
+            @Param("fromInstant") Instant fromInstant,
+            @Param("toInstant") Instant toInstant,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+                    select r from Reservation r
+                    join r.court c
+                    join c.venue v
+                    join r.user u
+                    where r.startAt >= :fromInstant and r.startAt < :toInstant
+                      and r.status = :status
+                    """,
+            countQuery = """
+                    select count(r) from Reservation r
+                    where r.startAt >= :fromInstant and r.startAt < :toInstant
+                      and r.status = :status
+                    """
+    )
+    Page<Reservation> findAdminPageByStatus(
+            @Param("fromInstant") Instant fromInstant,
+            @Param("toInstant") Instant toInstant,
+            @Param("status") ReservationStatus status,
+            Pageable pageable
+    );
 }

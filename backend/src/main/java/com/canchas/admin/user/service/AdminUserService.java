@@ -29,7 +29,11 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public Page<AdminUserResponse> list(String email, int page, int limit) {
         int size = Math.min(Math.max(limit, 1), 100);
-        return userRepository.searchByEmailOptional(email, PageRequest.of(Math.max(page, 1) - 1, size, Sort.by("email")))
+        var pageable = PageRequest.of(Math.max(page, 1) - 1, size, Sort.by("email"));
+        if (email == null || email.isBlank()) {
+            return userRepository.findAll(pageable).map(AdminUserResponse::from);
+        }
+        return userRepository.searchByEmailContainingIgnoreCase(email.trim(), pageable)
                 .map(AdminUserResponse::from);
     }
 

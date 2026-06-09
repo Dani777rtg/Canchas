@@ -99,6 +99,36 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
           {USER_LABELS.INACTIVO}
         </Badge>
       )
+    case 'PAGADO':
+      return (
+        <Badge variant="success" className={className}>
+          Pagado
+        </Badge>
+      )
+    case 'PENDIENTE':
+      return (
+        <Badge variant="warning" className={className}>
+          Pendiente
+        </Badge>
+      )
+    case 'FALLIDO':
+      return (
+        <Badge variant="destructive" className={className}>
+          Fallido
+        </Badge>
+      )
+    case 'REVERSADO':
+      return (
+        <Badge variant="muted" className={className}>
+          Reversado
+        </Badge>
+      )
+    case 'EXONERADO':
+      return (
+        <Badge variant="default" className={className}>
+          Exonerado
+        </Badge>
+      )
     default:
       return (
         <Badge variant="muted" className={className}>
