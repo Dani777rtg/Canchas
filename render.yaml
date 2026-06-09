@@ -50,11 +50,10 @@ services:
           name: canchas-web
           envVarKey: RENDER_EXTERNAL_URL
 
-  # --- Frontend React (sitio estático) ---
+  # --- Frontend React (sitio estático; sin plan: los static sites son gratis por defecto) ---
   - type: web
     name: canchas-web
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
