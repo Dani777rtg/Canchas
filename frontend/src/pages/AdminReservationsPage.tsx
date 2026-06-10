@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { ChevronLeft, ChevronRight, ListChecks, RefreshCw } from 'lucide-react'
-import { fetchAdminReservations } from '@/api/admin'
+import { toast } from 'sonner'
+import { fetchAdminReservations, recordAdminManualPayment } from '@/api/admin'
 import type { AdminReservation } from '@/types/admin'
 import { ApiError } from '@/api/client'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -24,17 +34,34 @@ import {
   todayIsoDate,
 } from '@/utils/format'
 
+function defaultFromDate(): string {
+  return addDaysIsoDate(todayIsoDate(), -7)
+}
+
+function defaultToDate(): string {
+  return addDaysIsoDate(todayIsoDate(), 60)
+}
+
+function totalAsNumber(total: string | number): number {
+  const n = typeof total === 'number' ? total : Number(total)
+  return Number.isFinite(n) ? n : 0
+}
+
 export function AdminReservationsPage() {
   usePageTitle('Reservas — Admin')
-  const [from, setFrom] = useState(() => addDaysIsoDate(todayIsoDate(), -30))
-  const [to, setTo] = useState(todayIsoDate)
-  const [appliedFrom, setAppliedFrom] = useState(from)
-  const [appliedTo, setAppliedTo] = useState(to)
+  const [from, setFrom] = useState(defaultFromDate)
+  const [to, setTo] = useState(defaultToDate)
+  const [appliedFrom, setAppliedFrom] = useState(defaultFromDate)
+  const [appliedTo, setAppliedTo] = useState(defaultToDate)
   const [page, setPage] = useState(1)
   const [rows, setRows] = useState<AdminReservation[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [payTarget, setPayTarget] = useState<AdminReservation | null>(null)
+  const [payAmount, setPayAmount] = useState('')
+  const [payRef, setPayRef] = useState('')
+  const [paySubmitting, setPaySubmitting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -67,6 +94,46 @@ export function AdminReservationsPage() {
     setAppliedTo(to)
   }
 
+  function openPayDialog(reservation: AdminReservation) {
+    setPayTarget(reservation)
+    setPayAmount(String(Math.round(totalAsNumber(reservation.total))))
+    setPayRef('')
+  }
+
+  function closePayDialog() {
+    if (paySubmitting) {
+      return
+    }
+    setPayTarget(null)
+  }
+
+  async function handleRecordPayment(e: FormEvent) {
+    e.preventDefault()
+    if (!payTarget) {
+      return
+    }
+    const amount = Number(payAmount)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Ingresá un monto válido mayor a cero.')
+      return
+    }
+    setPaySubmitting(true)
+    try {
+      await recordAdminManualPayment(payTarget.id, amount, payRef)
+      toast.success(`Pago registrado para ${payTarget.publicCode}`)
+      setPayTarget(null)
+      await load()
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : 'No se pudo registrar el pago',
+      )
+    } finally {
+      setPaySubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex items-start gap-3">
@@ -78,7 +145,8 @@ export function AdminReservationsPage() {
             Reservas
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Listado por rango de fechas (inicio de la reserva, zona Bogotá).
+            Listado por rango de fechas de inicio (zona Bogotá). Incluí fechas
+            futuras para ver reservas próximas.
           </p>
         </div>
       </header>
@@ -139,8 +207,8 @@ export function AdminReservationsPage() {
       {!loading && !error && rows.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No hay reservas en este rango. Creá una desde el panel cliente para
-            probar.
+            No hay reservas en este rango. Ampliá la fecha &quot;Hasta&quot; si
+            buscás reservas futuras, o creá una desde el panel cliente.
           </CardContent>
         </Card>
       )}
@@ -157,6 +225,7 @@ export function AdminReservationsPage() {
                 <TableHead>Estado</TableHead>
                 <TableHead>Pago</TableHead>
                 <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -178,10 +247,24 @@ export function AdminReservationsPage() {
                     <StatusBadge status={r.status} />
                   </TableCell>
                   <TableCell>
-                    <Badge variant="muted">{r.paymentStatus}</Badge>
+                    <StatusBadge status={r.paymentStatus} />
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {formatCop(r.total)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {r.paymentStatus === 'PENDIENTE' ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openPayDialog(r)}
+                      >
+                        Registrar pago
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -217,6 +300,57 @@ export function AdminReservationsPage() {
           )}
         </>
       )}
+
+      <Dialog open={payTarget !== null} onOpenChange={(open) => !open && closePayDialog()}>
+        <DialogContent>
+          <form onSubmit={(e) => void handleRecordPayment(e)}>
+            <DialogHeader>
+              <DialogTitle>Registrar pago manual</DialogTitle>
+              <DialogDescription>
+                {payTarget
+                  ? `Reserva ${payTarget.publicCode} · ${payTarget.userFullName}`
+                  : ''}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pay-amount">Monto (COP)</Label>
+                <Input
+                  id="pay-amount"
+                  type="number"
+                  min={1}
+                  step={1}
+                  required
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pay-ref">Referencia (opcional)</Label>
+                <Input
+                  id="pay-ref"
+                  placeholder="Ej. transferencia Nequi, efectivo en caja"
+                  value={payRef}
+                  onChange={(e) => setPayRef(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={paySubmitting}
+                onClick={closePayDialog}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={paySubmitting}>
+                {paySubmitting ? 'Guardando…' : 'Marcar como pagado'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

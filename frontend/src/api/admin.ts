@@ -40,6 +40,20 @@ export async function fetchAdminReservations(
   return apiFetch<SpringPage<AdminReservation>>(`/api/v1/admin/reservations?${q.toString()}`)
 }
 
+export async function recordAdminManualPayment(
+  reservationId: string,
+  amount: number,
+  externalRef?: string,
+): Promise<{ id: string; status: string; amount: number }> {
+  return apiFetch(`/api/v1/admin/reservations/${reservationId}/payments/manual`, {
+    method: 'POST',
+    body: JSON.stringify({
+      amount,
+      externalRef: externalRef?.trim() || undefined,
+    }),
+  })
+}
+
 export type ReportMap = Record<string, string | number | undefined>
 
 export async function fetchReportReservations(from: string, to: string): Promise<ReportMap> {
