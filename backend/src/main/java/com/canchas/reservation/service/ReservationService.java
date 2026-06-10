@@ -1,5 +1,6 @@
 package com.canchas.reservation.service;
 
+import com.canchas.audit.service.AuditService;
 import com.canchas.common.exception.ConflictException;
 import com.canchas.common.exception.ForbiddenException;
 import com.canchas.common.exception.NotFoundException;
@@ -12,6 +13,7 @@ import com.canchas.court.model.PricingTier;
 import com.canchas.court.repository.CourtOpeningHourRepository;
 import com.canchas.court.repository.CourtRepository;
 import com.canchas.court.repository.PricingTierRepository;
+import com.canchas.payment.repository.PaymentRepository;
 import com.canchas.reservation.dto.CreateReservationRequest;
 import com.canchas.reservation.dto.PatchReservationRequest;
 import com.canchas.reservation.dto.ReceiptResponse;
@@ -46,6 +48,7 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,6 +68,8 @@ public class ReservationService {
     private final CourtOpeningHourRepository openingHourRepository;
     private final PricingTierRepository pricingTierRepository;
     private final CommercialSettingsRepository commercialSettingsRepository;
+    private final PaymentRepository paymentRepository;
+    private final AuditService auditService;
     private final BusinessTime businessTime;
     private final ObjectMapper objectMapper;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -76,6 +81,8 @@ public class ReservationService {
             CourtOpeningHourRepository openingHourRepository,
             PricingTierRepository pricingTierRepository,
             CommercialSettingsRepository commercialSettingsRepository,
+            PaymentRepository paymentRepository,
+            AuditService auditService,
             BusinessTime businessTime,
             ObjectMapper objectMapper
     ) {
@@ -85,6 +92,8 @@ public class ReservationService {
         this.openingHourRepository = openingHourRepository;
         this.pricingTierRepository = pricingTierRepository;
         this.commercialSettingsRepository = commercialSettingsRepository;
+        this.paymentRepository = paymentRepository;
+        this.auditService = auditService;
         this.businessTime = businessTime;
         this.objectMapper = objectMapper;
     }
@@ -336,6 +345,41 @@ public class ReservationService {
         }
         reservationRepository.save(r);
         return ReservationResponse.from(loadDetail(r.getId()));
+    }
+
+    @Transactional
+    public void deleteByOwner(User user, UUID id) {
+        Reservation r = loadDetail(id);
+        if (!r.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("no autorizado");
+        }
+        purgeReservation(r, user, false);
+    }
+
+    @Transactional
+    public void deleteAsAdmin(User actor, UUID id) {
+        Reservation r = loadDetail(id);
+        purgeReservation(r, actor, true);
+    }
+
+    private void purgeReservation(Reservation r, User actor, boolean asAdmin) {
+        UUID id = r.getId();
+        paymentRepository.deleteByReservation_Id(id);
+        if (asAdmin) {
+            auditService.record(
+                    actor,
+                    "RESERVATION_DELETE",
+                    "Reservation",
+                    id.toString(),
+                    Map.of(
+                            "publicCode", r.getPublicCode(),
+                            "status", r.getStatus().name(),
+                            "userId", r.getUser().getId().toString()
+                    ),
+                    null
+            );
+        }
+        reservationRepository.delete(r);
     }
 
     @Transactional

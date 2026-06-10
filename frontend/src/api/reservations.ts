@@ -67,6 +67,12 @@ export async function cancelReservation(id: string): Promise<Reservation> {
   })
 }
 
+export async function deleteReservation(id: string): Promise<void> {
+  await apiFetch<void>(`/api/v1/reservations/${id}`, {
+    method: 'DELETE',
+  })
+}
+
 export async function fetchReceipt(id: string): Promise<Receipt> {
   return apiFetch<Receipt>(`/api/v1/reservations/${id}/receipt`)
 }

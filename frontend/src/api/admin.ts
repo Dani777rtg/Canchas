@@ -82,6 +82,12 @@ export async function recordAdminManualPayment(
   })
 }
 
+export async function deleteAdminReservation(reservationId: string): Promise<void> {
+  await apiFetch<void>(`/api/v1/admin/reservations/${reservationId}`, {
+    method: 'DELETE',
+  })
+}
+
 export type ReportMap = Record<string, string | number | undefined>
 
 export async function fetchReportReservations(from: string, to: string): Promise<ReportMap> {

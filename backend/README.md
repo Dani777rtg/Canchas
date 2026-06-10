@@ -29,12 +29,14 @@ Tambi�n se crean sede demo, cancha `Cancha 1`, horario 08:00�22:00 y tarifa 
 - `GET /api/v1/reservations/mine?page=&limit=`
 - `GET /api/v1/reservations/{id}`, `PATCH /api/v1/reservations/{id}`
 - `POST /api/v1/reservations/{id}/cancel`
+- `DELETE /api/v1/reservations/{id}`
 - `GET /api/v1/reservations/{id}/receipt`
 
 ### Administrador (`ROLE_ADMINISTRADOR`)
 
 - `GET /api/v1/admin/users`, `PATCH /api/v1/admin/users/{id}`
 - `GET /api/v1/admin/reservations?from=&to=&page=&limit=&status=`
+- `DELETE /api/v1/admin/reservations/{id}`
 - `GET /api/v1/admin/courts`, `POST /api/v1/admin/courts`, `PATCH /api/v1/admin/courts/{id}`
 - `GET /api/v1/admin/courts/{id}/conflicts`
 - `PUT /api/v1/admin/courts/{id}/opening-hours`, `PUT /api/v1/admin/courts/{id}/pricing`

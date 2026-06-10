@@ -13,7 +13,7 @@ import {
 import { toast } from 'sonner'
 import type { Receipt, Reservation } from '@/types/reservation'
 import {
-  cancelReservation,
+  deleteReservation,
   fetchMyReservations,
   fetchReceipt,
 } from '@/api/reservations'
@@ -63,13 +63,6 @@ function isCancelled(r: Reservation): boolean {
   return r.status === 'CANCELADA' || r.status === 'CANCELADA_TARDIA'
 }
 
-function canCancel(r: Reservation): boolean {
-  if (isCancelled(r) || r.status === 'FINALIZADA') {
-    return false
-  }
-  return new Date(r.startAt) > new Date()
-}
-
 type TabValue = 'upcoming' | 'past' | 'cancelled'
 
 export function MisReservasPage() {
@@ -82,7 +75,7 @@ export function MisReservasPage() {
   const [error, setError] = useState<string | null>(null)
   const [actionId, setActionId] = useState<string | null>(null)
   const [receipt, setReceipt] = useState<Receipt | null>(null)
-  const [cancelTarget, setCancelTarget] = useState<Reservation | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Reservation | null>(null)
   const [tab, setTab] = useState<TabValue>('upcoming')
 
   const load = useCallback(async () => {
@@ -105,19 +98,19 @@ export function MisReservasPage() {
     void load()
   }, [load])
 
-  async function handleConfirmCancel() {
-    if (!cancelTarget) {
+  async function handleConfirmDelete() {
+    if (!deleteTarget) {
       return
     }
-    setActionId(cancelTarget.id)
+    setActionId(deleteTarget.id)
     try {
-      await cancelReservation(cancelTarget.id)
-      toast.success('Reserva cancelada')
-      setCancelTarget(null)
+      await deleteReservation(deleteTarget.id)
+      toast.success('Reserva eliminada')
+      setDeleteTarget(null)
       await load()
     } catch (e) {
       toast.error(
-        e instanceof ApiError ? e.message : 'No se pudo cancelar la reserva',
+        e instanceof ApiError ? e.message : 'No se pudo eliminar la reserva',
       )
     } finally {
       setActionId(null)
@@ -259,18 +252,16 @@ export function MisReservasPage() {
                             <FileText className="h-3.5 w-3.5" />
                             Comprobante
                           </Button>
-                          {canCancel(r) && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={actionId === r.id}
-                              onClick={() => setCancelTarget(r)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Cancelar
-                            </Button>
-                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={actionId === r.id}
+                            onClick={() => setDeleteTarget(r)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Eliminar
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -378,23 +369,23 @@ export function MisReservasPage() {
       </Dialog>
 
       <AlertDialog
-        open={cancelTarget !== null}
+        open={deleteTarget !== null}
         onOpenChange={(open) => {
           if (!open && actionId === null) {
-            setCancelTarget(null)
+            setDeleteTarget(null)
           }
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Cancelar reserva?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar reserva?</AlertDialogTitle>
             <AlertDialogDescription>
-              {cancelTarget && (
+              {deleteTarget && (
                 <>
-                  Vas a cancelar la reserva de la{' '}
-                  <strong>{cancelTarget.courtName}</strong> del{' '}
+                  Vas a eliminar permanentemente la reserva de la{' '}
+                  <strong>{deleteTarget.courtName}</strong> del{' '}
                   <strong>
-                    {formatInstantRange(cancelTarget.startAt, cancelTarget.endAt)}
+                    {formatInstantRange(deleteTarget.startAt, deleteTarget.endAt)}
                   </strong>
                   . Esta acción no se puede deshacer.
                 </>
@@ -408,7 +399,7 @@ export function MisReservasPage() {
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault()
-                void handleConfirmCancel()
+                void handleConfirmDelete()
               }}
               disabled={actionId !== null}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -416,12 +407,12 @@ export function MisReservasPage() {
               {actionId !== null ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Cancelando…
+                  Eliminando…
                 </>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4" />
-                  Sí, cancelar
+                  Sí, eliminar
                 </>
               )}
             </AlertDialogAction>

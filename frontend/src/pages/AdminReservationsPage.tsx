@@ -1,9 +1,23 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { ChevronLeft, ChevronRight, ListChecks, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ListChecks, RefreshCw, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { fetchAdminReservations, recordAdminManualPayment } from '@/api/admin'
+import {
+  deleteAdminReservation,
+  fetchAdminReservations,
+  recordAdminManualPayment,
+} from '@/api/admin'
 import type { AdminReservation } from '@/types/admin'
 import { ApiError } from '@/api/client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -62,6 +76,8 @@ export function AdminReservationsPage() {
   const [payAmount, setPayAmount] = useState('')
   const [payRef, setPayRef] = useState('')
   const [paySubmitting, setPaySubmitting] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<AdminReservation | null>(null)
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -131,6 +147,27 @@ export function AdminReservationsPage() {
       )
     } finally {
       setPaySubmitting(false)
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) {
+      return
+    }
+    setDeleteSubmitting(true)
+    try {
+      await deleteAdminReservation(deleteTarget.id)
+      toast.success(`Reserva ${deleteTarget.publicCode} eliminada`)
+      setDeleteTarget(null)
+      await load()
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : 'No se pudo eliminar la reserva',
+      )
+    } finally {
+      setDeleteSubmitting(false)
     }
   }
 
@@ -253,18 +290,28 @@ export function AdminReservationsPage() {
                     {formatCop(r.total)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {r.paymentStatus === 'PENDIENTE' ? (
+                    <div className="flex flex-wrap justify-end gap-1.5">
+                      {r.paymentStatus === 'PENDIENTE' && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openPayDialog(r)}
+                        >
+                          Registrar pago
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => openPayDialog(r)}
+                        disabled={deleteSubmitting}
+                        onClick={() => setDeleteTarget(r)}
                       >
-                        Registrar pago
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Eliminar
                       </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -351,6 +398,46 @@ export function AdminReservationsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleteSubmitting) {
+            setDeleteTarget(null)
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar reserva?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && (
+                <>
+                  Vas a eliminar permanentemente la reserva{' '}
+                  <strong>{deleteTarget.publicCode}</strong> de{' '}
+                  <strong>{deleteTarget.userFullName}</strong>. Esta acción no
+                  se puede deshacer.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteSubmitting}>
+              Volver
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                void handleConfirmDelete()
+              }}
+              disabled={deleteSubmitting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteSubmitting ? 'Eliminando…' : 'Sí, eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
