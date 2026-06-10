@@ -14,6 +14,16 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { usePageTitle } from '@/lib/use-page-title'
+import {
+  CO_MOBILE_PHONE_HINT,
+  isValidCoMobilePhone,
+  sanitizePhoneDigits,
+} from '@/utils/phone'
+import {
+  EMAIL_FORMAT_HINT,
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+} from '@/utils/email'
 
 export function RegisterPage() {
   usePageTitle('Crear cuenta')
@@ -30,13 +40,25 @@ export function RegisterPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    const emailTrimmed = email.trim()
+    if (!isValidEmail(emailTrimmed)) {
+      setError(EMAIL_INVALID_MESSAGE)
+      return
+    }
+    const phoneDigits = phone.trim()
+    if (phoneDigits && !isValidCoMobilePhone(phoneDigits)) {
+      setError(
+        'El teléfono debe ser un celular colombiano válido de 10 dígitos (solo números, inicia con 3).',
+      )
+      return
+    }
     setSubmitting(true)
     try {
       await register({
-        email: email.trim(),
+        email: emailTrimmed,
         password,
         fullName: fullName.trim(),
-        phone: phone.trim() || undefined,
+        phone: phoneDigits || undefined,
       })
       navigate('/panel', { replace: true })
     } catch (err) {
@@ -101,6 +123,7 @@ export function RegisterPage() {
                 required
                 placeholder="tu@correo.com"
               />
+              <p className="text-xs text-muted-foreground">{EMAIL_FORMAT_HINT}</p>
             </div>
 
             <div className="space-y-1.5">
@@ -111,12 +134,15 @@ export function RegisterPage() {
               <Input
                 id="reg-phone"
                 type="tel"
+                inputMode="numeric"
                 autoComplete="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                maxLength={30}
+                onChange={(e) => setPhone(sanitizePhoneDigits(e.target.value))}
+                maxLength={10}
+                pattern="3[0-9]{9}"
                 placeholder="3001234567"
               />
+              <p className="text-xs text-muted-foreground">{CO_MOBILE_PHONE_HINT}</p>
             </div>
 
             <div className="space-y-1.5">

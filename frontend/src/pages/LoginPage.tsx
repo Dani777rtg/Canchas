@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { usePageTitle } from '@/lib/use-page-title'
+import { EMAIL_FORMAT_HINT, EMAIL_INVALID_MESSAGE, isValidEmail } from '@/utils/email'
 
 export function LoginPage() {
   usePageTitle('Iniciar sesión')
@@ -30,9 +31,14 @@ export function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    const emailTrimmed = email.trim()
+    if (!isValidEmail(emailTrimmed)) {
+      setError(EMAIL_INVALID_MESSAGE)
+      return
+    }
     setSubmitting(true)
     try {
-      await login(email.trim(), password)
+      await login(emailTrimmed, password)
       navigate(from, { replace: true })
     } catch (err) {
       const msg =
@@ -80,6 +86,7 @@ export function LoginPage() {
                 required
                 placeholder="tu@correo.com"
               />
+              <p className="text-xs text-muted-foreground">{EMAIL_FORMAT_HINT}</p>
             </div>
 
             <div className="space-y-1.5">

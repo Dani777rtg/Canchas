@@ -66,6 +66,43 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("HTTP POST /register: rechaza telefono con letras o formato invalido.")
+    void registerShouldRejectInvalidPhone() throws Exception {
+        String payload = """
+                {
+                  "email": "cliente@demo.com",
+                  "password": "Clave123A",
+                  "fullName": "Cliente Demo",
+                  "phone": "300abc1234"
+                }
+                """;
+
+        mockMvc.perform(post("/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @DisplayName("HTTP POST /register: rechaza correo con formato invalido.")
+    void registerShouldRejectInvalidEmail() throws Exception {
+        String payload = """
+                {
+                  "email": "correo-sin-formato",
+                  "password": "Clave123A",
+                  "fullName": "Cliente Demo"
+                }
+                """;
+
+        mockMvc.perform(post("/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     @DisplayName("HTTP POST /login: con contraseña incorrecta responde 401 y código de error esperado.")
     void loginShouldFailWhenPasswordIsInvalid() throws Exception {
         String registerPayload = """

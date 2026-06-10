@@ -6,6 +6,21 @@ export async function fetchAdminCourts(): Promise<CourtSummary[]> {
   return apiFetch<CourtSummary[]>('/api/v1/admin/courts')
 }
 
+export async function patchAdminCourt(
+  courtId: string,
+  body: {
+    name?: string
+    sportType?: string
+    description?: string
+    status?: CourtSummary['status']
+  },
+): Promise<CourtSummary> {
+  return apiFetch<CourtSummary>(`/api/v1/admin/courts/${courtId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+}
+
 export async function fetchAdminUsers(
   page = 1,
   limit = 20,
@@ -19,6 +34,19 @@ export async function fetchAdminUsers(
     q.set('email', email.trim())
   }
   return apiFetch<SpringPage<AdminUser>>(`/api/v1/admin/users?${q.toString()}`)
+}
+
+export async function patchAdminUser(
+  userId: string,
+  body: {
+    status?: AdminUser['status']
+    role?: AdminUser['role']
+  },
+): Promise<AdminUser> {
+  return apiFetch<AdminUser>(`/api/v1/admin/users/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
 }
 
 export async function fetchAdminReservations(

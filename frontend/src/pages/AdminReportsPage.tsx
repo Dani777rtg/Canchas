@@ -39,10 +39,18 @@ function asNumber(v: string | number | undefined): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function defaultFromDate(): string {
+  return addDaysIsoDate(todayIsoDate(), -7)
+}
+
+function defaultToDate(): string {
+  return addDaysIsoDate(todayIsoDate(), 60)
+}
+
 export function AdminReportsPage() {
   usePageTitle('Informes — Admin')
-  const [from, setFrom] = useState(() => addDaysIsoDate(todayIsoDate(), -7))
-  const [to, setTo] = useState(todayIsoDate)
+  const [from, setFrom] = useState(defaultFromDate)
+  const [to, setTo] = useState(defaultToDate)
   const [reservations, setReservations] = useState<ReportMap | null>(null)
   const [occupancy, setOccupancy] = useState<ReportMap | null>(null)
   const [revenue, setRevenue] = useState<ReportMap | null>(null)
@@ -114,8 +122,8 @@ export function AdminReportsPage() {
               Informes
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Rango de fechas en calendario local. Los datos del backend usan
-              la zona horaria de negocio (Bogotá).
+              Rango por inicio de reserva (zona Bogotá). Incluí fechas futuras
+              para contar reservas próximas.
             </p>
           </div>
         </div>
@@ -186,6 +194,15 @@ export function AdminReportsPage() {
             <Skeleton key={i} className="h-32 w-full" />
           ))}
         </div>
+      )}
+
+      {!loading && reservations && reservationCount === 0 && (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            No hay reservas en este rango. Ampliá la fecha &quot;Hasta&quot; si
+            buscás reservas futuras.
+          </CardContent>
+        </Card>
       )}
 
       {!loading && reservations && (

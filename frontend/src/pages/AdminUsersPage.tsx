@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { ChevronLeft, ChevronRight, Search, Users } from 'lucide-react'
-import { fetchAdminUsers } from '@/api/admin'
+import { toast } from 'sonner'
+import { fetchAdminUsers, patchAdminUser } from '@/api/admin'
 import type { AdminUser } from '@/types/admin'
 import { ApiError } from '@/api/client'
+import { useAuth } from '@/auth/useAuth'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,6 +23,7 @@ import { usePageTitle } from '@/lib/use-page-title'
 
 export function AdminUsersPage() {
   usePageTitle('Usuarios — Admin')
+  const { user: currentUser } = useAuth()
   const [emailFilter, setEmailFilter] = useState('')
   const [appliedFilter, setAppliedFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -28,6 +31,7 @@ export function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -59,6 +63,25 @@ export function AdminUsersPage() {
     setAppliedFilter(emailFilter.trim())
   }
 
+  async function setUserStatus(user: AdminUser, status: AdminUser['status']) {
+    setUpdatingUserId(user.id)
+    try {
+      await patchAdminUser(user.id, { status })
+      toast.success(
+        status === 'ACTIVO'
+          ? `${user.fullName} quedó activo`
+          : `${user.fullName} quedó inactivo`,
+      )
+      await load()
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError ? e.message : 'No se pudo actualizar el usuario',
+      )
+    } finally {
+      setUpdatingUserId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex items-start gap-3">
@@ -70,7 +93,8 @@ export function AdminUsersPage() {
             Usuarios
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Listado paginado. Filtrá por correo (coincidencia en servidor).
+            Listado paginado. Activá o desactivá clientes desde la columna
+            Acciones.
           </p>
         </div>
       </header>
@@ -129,10 +153,14 @@ export function AdminUsersPage() {
                 <TableHead>Correo</TableHead>
                 <TableHead>Rol</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((u) => (
+              {rows.map((u) => {
+                const isSelf = currentUser?.id === u.id
+                const canToggle = u.role === 'CLIENTE' && !isSelf
+                return (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.fullName}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -146,8 +174,37 @@ export function AdminUsersPage() {
                   <TableCell>
                     <StatusBadge status={u.status} />
                   </TableCell>
+                  <TableCell className="text-right">
+                    {canToggle ? (
+                      u.status === 'ACTIVO' ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={updatingUserId === u.id}
+                          onClick={() => void setUserStatus(u, 'INACTIVO')}
+                        >
+                          Desactivar
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={updatingUserId === u.id}
+                          onClick={() => void setUserStatus(u, 'ACTIVO')}
+                        >
+                          Activar
+                        </Button>
+                      )
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {isSelf ? 'Tu cuenta' : '—'}
+                      </span>
+                    )}
+                  </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
 

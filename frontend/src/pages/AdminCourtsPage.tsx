@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Building2, MapPin, RefreshCw, Search } from 'lucide-react'
-import { fetchAdminCourts } from '@/api/admin'
+import { toast } from 'sonner'
+import { fetchAdminCourts, patchAdminCourt } from '@/api/admin'
 import type { CourtSummary } from '@/types/admin'
 import { ApiError } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +32,7 @@ export function AdminCourtsPage() {
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [cityFilter, setCityFilter] = useState<string | null>(null)
+  const [updatingCourtId, setUpdatingCourtId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -98,6 +100,27 @@ export function AdminCourtsPage() {
   }, [filtered])
 
   const activeCount = courts.filter((c) => c.status === 'ACTIVA').length
+
+  async function setCourtStatus(court: CourtSummary, status: CourtSummary['status']) {
+    setUpdatingCourtId(court.id)
+    try {
+      await patchAdminCourt(court.id, { status })
+      toast.success(
+        status === 'ACTIVA'
+          ? `${court.name} quedó activa`
+          : status === 'INACTIVA'
+            ? `${court.name} quedó inactiva`
+            : `${court.name} actualizada`,
+      )
+      await load()
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError ? e.message : 'No se pudo actualizar la cancha',
+      )
+    } finally {
+      setUpdatingCourtId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -255,6 +278,7 @@ export function AdminCourtsPage() {
                     <TableHead>Deporte</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Nota mantenimiento</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -269,6 +293,32 @@ export function AdminCourtsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {c.maintenanceNote ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex flex-wrap justify-end gap-1.5">
+                          {c.status !== 'ACTIVA' && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={updatingCourtId === c.id}
+                              onClick={() => void setCourtStatus(c, 'ACTIVA')}
+                            >
+                              Activar
+                            </Button>
+                          )}
+                          {c.status !== 'INACTIVA' && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={updatingCourtId === c.id}
+                              onClick={() => void setCourtStatus(c, 'INACTIVA')}
+                            >
+                              Desactivar
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
