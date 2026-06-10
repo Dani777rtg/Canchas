@@ -1,5 +1,6 @@
 package com.canchas.admin;
 
+import com.canchas.test.IntegrationTestDatabaseCleaner;
 import com.canchas.user.model.User;
 import com.canchas.user.model.UserRole;
 import com.canchas.user.model.UserStatus;
@@ -34,9 +35,12 @@ class AdminApiIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private IntegrationTestDatabaseCleaner databaseCleaner;
+
     @BeforeEach
     void seedAdmin() {
-        userRepository.deleteAll();
+        databaseCleaner.resetAll();
         User admin = new User();
         admin.setEmail("admin@test.local");
         admin.setPasswordHash(passwordEncoder.encode("Admin123A"));

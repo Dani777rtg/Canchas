@@ -1,5 +1,6 @@
 package com.canchas.auth;
 
+import com.canchas.test.IntegrationTestDatabaseCleaner;
 import com.canchas.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,9 +33,12 @@ class AuthControllerIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private IntegrationTestDatabaseCleaner databaseCleaner;
+
     @BeforeEach
     void cleanDb() {
-        userRepository.deleteAll();
+        databaseCleaner.resetAll();
     }
 
     @Test

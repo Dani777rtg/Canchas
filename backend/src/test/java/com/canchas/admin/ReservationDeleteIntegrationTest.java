@@ -1,12 +1,12 @@
 package com.canchas.admin;
 
-import com.canchas.audit.repository.AuditLogRepository;
 import com.canchas.court.model.Court;
 import com.canchas.court.model.CourtStatus;
 import com.canchas.court.repository.CourtRepository;
 import com.canchas.reservation.model.Reservation;
 import com.canchas.reservation.model.ReservationStatus;
 import com.canchas.reservation.repository.ReservationRepository;
+import com.canchas.test.IntegrationTestDatabaseCleaner;
 import com.canchas.user.model.User;
 import com.canchas.user.model.UserRole;
 import com.canchas.user.model.UserStatus;
@@ -55,7 +55,7 @@ class ReservationDeleteIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Autowired
-    private AuditLogRepository auditLogRepository;
+    private IntegrationTestDatabaseCleaner databaseCleaner;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -67,11 +67,7 @@ class ReservationDeleteIntegrationTest {
 
     @BeforeEach
     void seedData() throws Exception {
-        reservationRepository.deleteAll();
-        auditLogRepository.deleteAll();
-        courtRepository.deleteAll();
-        venueRepository.deleteAll();
-        userRepository.deleteAll();
+        databaseCleaner.resetAll();
 
         User admin = new User();
         admin.setEmail("admin@test.local");
